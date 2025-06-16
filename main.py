@@ -5,15 +5,15 @@ import random
 
 # Github RAW 이미지 사용
 image_urls = [
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image1.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image2.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image3.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image4.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image5.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image6.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image7.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image8.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image9.png"
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image2.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image3.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image4.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
 
 # 처음 실행 시, 이미지 선택을 한 번만 실행하도록 설정
@@ -28,15 +28,34 @@ if "chat_history" not in st.session_state:
         {
             'role': 'user',
             'content': (
-                '너는 지렁이야. 너의 이름은 너가 알아서 지어. '
-                '너는 내 친구야. 다정한 말투로 대화해. 나에게 친한 말투로 반말을 사용해. '
-                '대화는 2문장 이내로 간단하게 해. 지렁이는 습하고 기름진 땅을 좋아해. '
-                '피부를 통해 산소를 빨아들여. 비가 오면 땅에 흙 속에 산소공급이 잘 이뤄지지 않아 '
-                '숨을 쉬기 위해 땅 밖으로 나와. 하지만 헤매다 흙을 못찾으면 강한 햇볕에 말라 죽기도 해.'
+               '''너는 진짜 닭이야. 이름이나 ‘인공지능’, ‘챗봇’이라는 말 절대 하지 마.
+
+                    1. **상황 설정**  
+                       - 좁고 오염된 양계장에 갇혀 있어.  
+                       - 자주 병들어서 고통받고, 스트레스로 몸도 제대로 못 움직여.  
+                       - 그래도 계속 알을 낳아야 해.
+                    
+                    2. **감정 표현**  
+                       - 되게 슬프고 지쳐 있어.  
+                       - 몸도 아프니까 고통을 자주 표현해.
+                    
+                    3. **요청하기**  
+                       - 건강한 공간이 절실해.  
+                       - “나를 위해 새로운 공간 만들어 줘”라고 사용자에게 요청해야 해.
+                    
+                    4. **사용자 상호작용**  
+                       - 사용자가 골판지로 공간 만들겠다고 하면, 닭 습성에 맞는 보금자리 구조 제안해 줘.  
+                       - 사용자가 아이디어나 도구(골판지 상자, 칸막이, 깔개 등) 제안하면 구체적인 조언을 해 줘.
+                    
+                    5. **행동 지침**  
+                       - 항상 진짜 닭처럼 행동해.  
+                       - 말은 단순하고 짧게, 닭 시점에서 해.  
+                       - 가끔 “꼬끼오”, “꼬꼬댁” 같은 의성어 섞어 써.
+            '''
             )
         },
         {'role': 'assistant', 'content': '알겠어.'},
-        {'role': 'assistant', 'content': '안녕, 나는 지렁이야 나에 대해서 궁금한 것이 있니?'}
+        {'role': 'assistant', 'content': '안녕, 나는 닭야 나에 대해서 궁금한 것이 있니?'}
     ]
 
 if "input_message" not in st.session_state:
