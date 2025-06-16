@@ -110,7 +110,7 @@ class CompletionExecutor:
                     {"role": "assistant", "content": chat_data["message"]["content"]}
                 )
                 # 답변 추가 후 강제 rerun!
-                st.experimental_rerun()
+                st.rerun()
             except json.JSONDecodeError as e:
                 print("JSONDecodeError:", e)
         else:
