@@ -16,7 +16,7 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image9.png"
 ]
 
-# 처음 실행 시, 이미지 선택을 한 번만 실행하도록 설정
+# 첫 실행 시, 이미지 선택을 한 번만
 if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
@@ -83,9 +83,10 @@ class CompletionExecutor:
         if json_data:
             try:
                 chat_data = json.loads(json_data)
-                st.session_state.chat_history.append(
-                    {"role": "assistant", "content": chat_data["message"]["content"]}
-                )
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": chat_data["message"]["content"]
+                })
             except json.JSONDecodeError:
                 print("JSONDecodeError")
         else:
@@ -104,7 +105,7 @@ st.markdown(
     '<h1 class="title">닭과 대화나누기</h1>',
     unsafe_allow_html=True
 )
-bot_profile_url = st.session_state.selected_image
+bot_profile_url = selected_image
 st.markdown(f"""
     <style>
     body, .main, .block-container {{ background-color: #BACEE0 !important; }}
@@ -127,7 +128,10 @@ with st.form(key="input_form", clear_on_submit=True):
 
 # 메시지 전송 처리
 if submit_button and user_msg:
-    st.session_state.chat_history.append({"role": "user", "content": user_msg})
+    st.session_state.chat_history.append({
+        "role": "user",
+        "content": user_msg
+    })
     completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.8,
@@ -148,19 +152,21 @@ for message in st.session_state.chat_history[3:]:
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
     if role == "Chatbot":
-        st.markdown(f'''<div class="message-container">
+        st.markdown(f'''
+            <div class="message-container">
                 <img src="{profile_url}" class="profile-pic" alt="프로필 이미지">
                 <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
     else:
-        st.markdown(f'''<div class="message-container">
+        st.markdown(f'''
+            <div class="message-container">
                 <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # 대화 복사 기능
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
-with st.form(key="copy_form"): 
+with st.form(key="copy_form"):
     copy_button = st.form_submit_button(label="복사")
 if copy_button:
     text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[3:]])
@@ -174,7 +180,7 @@ if st.session_state.get('copied_chat_history'):
         <button onclick="copyToClipboard()">클립보드로 복사</button>
         <script>
         function copyToClipboard() {{
-            const text = document.getElementById('copied_chat_history').value.replace(/\\n/g, '\n');
+            const text = document.getElementById('copied_chat_history').value.replace(/\\n/g, '\\n');
             navigator.clipboard.writeText(text).then(() => alert('클립보드로 복사되었습니다!'));
         }}
         </script>
