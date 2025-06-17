@@ -100,13 +100,26 @@ st.markdown(f"""
   .chat-container {{
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
   }}
-  .header {{ text-align: center; padding: 10px; font-size: 28px; font-weight: bold; }}
+  .header {{
+    text-align: center;
+    padding: 10px;
+    font-size: 28px;
+    font-weight: bold;
+  }}
   .chat-box {{
     flex: 1;
     overflow-y: auto;
     padding: 20px;
+  }}
+  /* 스크롤바 스타일 */
+  .chat-box::-webkit-scrollbar {{
+    width: 8px;
+  }}
+  .chat-box::-webkit-scrollbar-thumb {{
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
   }}
   .message-container {{ display: flex; margin-bottom: 10px; align-items: center; }}
   .message-user {{
@@ -131,9 +144,18 @@ st.markdown(f"""
   .profile-pic {{
     width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;
   }}
-  .input-area {{ padding: 10px; background-color: #BACEE0; }}
-  .stTextInput > div > div > input {{ height: 38px; width: 100%; }}
-  .stButton button {{ height: 38px !important; width: 70px !important; }}
+  .input-area {{
+    padding: 10px;
+    background-color: #BACEE0;
+  }}
+  .stTextInput > div > div > input {{
+    height: 38px;
+    width: 100%;
+  }}
+  .stButton button {{
+    height: 38px !important;
+    width: 70px !important;
+  }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -161,7 +183,7 @@ for msg in st.session_state.chat_history[1:]:
         ''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 입력창
+# 입력창 분리
 st.markdown('<div class="input-area">', unsafe_allow_html=True)
 with st.form(key="input_form", clear_on_submit=True):
     user_input = st.text_input("", placeholder="메시지를 입력하세요...")
