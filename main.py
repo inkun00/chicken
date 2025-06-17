@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import requests
 import json
@@ -60,6 +61,7 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
+        # 첫 번째 유효 응답만 가져와 중복 방지
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:]
@@ -67,7 +69,9 @@ class CompletionExecutor:
                     continue
                 try:
                     chat_data = json.loads(json_data)
-                    full_content += chat_data.get("message", {}).get("content", "")
+                    content = chat_data.get("message", {}).get("content", "")
+                    full_content = content
+                    break
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
         if full_content:
@@ -142,3 +146,4 @@ for message in st.session_state.chat_history[1:]:
                 <div class="message-user">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
+```
