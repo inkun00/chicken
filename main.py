@@ -3,6 +3,7 @@ import requests
 import json
 import random
 import re
+import streamlit.components.v1 as components
 
 # 🐔 닭 이미지 (지렁이 아님!)
 image_urls = [
@@ -60,7 +61,6 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
-        # 모든 data: 조각을 합쳐서 처리
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:].strip()
@@ -72,11 +72,9 @@ class CompletionExecutor:
                     full_content += chunk
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
-        # 중복 제거
         m = re.match(r'^(?P<part>.+)\1$', full_content, flags=re.DOTALL)
         if m:
             full_content = m.group('part')
-
         if full_content:
             st.session_state.chat_history.append({
                 "role": "assistant",
@@ -104,7 +102,7 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
 .message-user { background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
 .message-assistant { background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
 .profile-pic { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
-.chat-box { background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; margin: 0 auto; width: 80%; }
+.chat-box { /* 스타일은 HTML 내에서 지정 */ }
 .stTextInput > div > div > input { height: 38px; width: 100%; }
 .stButton button { height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }
 </style>
@@ -112,26 +110,25 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
 
 bot_profile_url = selected_image
 
-# 채팅 출력용 placeholder 생성
-chat_placeholder = st.empty()
-
 def render_chat():
-    # HTML 문자열로 한 번에 조립
-    html = '<div class="chat-box">'
+    # HTML 문자열로 조립
+    html = '<div id="chat-box" style="background-color:#BACEE0;border:none;padding:20px;border-radius:10px;height:400px;overflow-y:auto;">'
     for msg in st.session_state.chat_history[1:]:
         if msg["role"] == "assistant":
-            html += f'''
+            html += f"""
 <div class="message-container">
     <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
     <div class="message-assistant">{msg["content"]}</div>
-</div>'''
+</div>"""
         else:
-            html += f'''
+            html += f"""
 <div class="message-container">
     <div class="message-user">{msg["content"]}</div>
-</div>'''
-    html += '</div>'
-    chat_placeholder.markdown(html, unsafe_allow_html=True)
+</div>"""
+    html += "</div>"
+    # 스크롤 자동 이동 스크립트
+    html += "<script>var cb=document.getElementById('chat-box');cb.scrollTop=cb.scrollHeight;</script>"
+    components.html(html, height=450, scrolling=True)
 
 # 초기 렌더링: 입력창 위에 대화 표시
 render_chat()
