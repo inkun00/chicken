@@ -11,7 +11,7 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image4.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
-    "raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
