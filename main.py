@@ -60,6 +60,7 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
+        # 모든 data: 조각을 합쳐서 처리
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:].strip()
@@ -110,25 +111,27 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
 """, unsafe_allow_html=True)
 
 bot_profile_url = selected_image
+
 # 채팅 출력용 placeholder 생성
 chat_placeholder = st.empty()
 
 def render_chat():
-    chat_html = '<div class="chat-box">'
+    # HTML 문자열로 한 번에 조립
+    html = '<div class="chat-box">'
     for msg in st.session_state.chat_history[1:]:
         if msg["role"] == "assistant":
-            chat_html += f"""
+            html += f'''
 <div class="message-container">
     <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
     <div class="message-assistant">{msg["content"]}</div>
-</div>"""
+</div>'''
         else:
-            chat_html += f"""
+            html += f'''
 <div class="message-container">
     <div class="message-user">{msg["content"]}</div>
-</div>"""
-    chat_html += '</div>'
-    chat_placeholder.markdown(chat_html, unsafe_allow_html=True)
+</div>'''
+    html += '</div>'
+    chat_placeholder.markdown(html, unsafe_allow_html=True)
 
 # 초기 렌더링: 입력창 위에 대화 표시
 render_chat()
