@@ -183,4 +183,4 @@ if copy_button:
     st.session_state.copied_chat_history = text
 if st.session_state.get("copied_chat_history"):
     st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
-    st.text_area("", value=st.session_state.copied_chat
+    st.text_area("", value=st.session_state.copied_chat)
