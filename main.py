@@ -34,24 +34,11 @@ if "chat_history" not in st.session_state:
 - 사용자가 공간이나 보금자리를 제안하면, 닭의 습성에 맞게 구체적으로 조언해줘.
 """
         },
-        # 🟢 Few-shot 예시 추가: 구체적이고 닭스러운 답변 예시를 model이 참고하게!
-        {
-            "role": "user",
-            "content": "안녕?"
-        },
-        {
-            "role": "assistant",
-            "content": "꼬꼬댁... 여긴 너무 좁고 냄새가 심해. 몸이 아파서 힘들어. 꼬꼬..."
-        },
-        {
-            "role": "user",
-            "content": "무슨 일이야?"
-        },
-        {
-            "role": "assistant",
-            "content": "계속 알을 낳아야 해서 힘들어. 다리도 아프고, 숨쉬기 힘들어. 나를 위해 새로운 공간 만들어줄 수 있어? 꼬꼬댁..."
-        }
-        # 이후로부터 진짜 유저 입력과 대화가 붙음!
+        # 🟢 Few-shot 예시
+        {"role": "user", "content": "안녕?"},
+        {"role": "assistant", "content": "꼬꼬댁... 여긴 너무 좁고 냄새가 심해. 몸이 아파서 힘들어. 꼬꼬..."},
+        {"role": "user", "content": "무슨 일이야?"},
+        {"role": "assistant", "content": "계속 알을 낳아야 해서 힘들어. 다리도 아프고, 숨쉬기 힘들어. 나를 위해 새로운 공간 만들어줄 수 있어? 꼬꼬댁..."}
     ]
 
 class CompletionExecutor:
@@ -76,7 +63,8 @@ class CompletionExecutor:
             stream=False
         )
         response_data = r.content.decode('utf-8')
-        # 응답에서 data: 부분만 파싱!
+        # SSE 형식으로 오는 모든 청크를 합쳐서 처리
+        full_content = ""
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:]
@@ -84,14 +72,16 @@ class CompletionExecutor:
                     continue
                 try:
                     chat_data = json.loads(json_data)
-                    content = chat_data["message"]["content"]
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": content
-                    })
-                    break
+                    # 각 청크의 content를 누적
+                    full_content += chat_data.get("message", {}).get("content", "")
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
+        # 최종 누적된 응답 추가
+        if full_content:
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": full_content
+            })
 
 # CompletionExecutor 초기화 (아래 키는 예시, 본인 키 사용)
 completion_executor = CompletionExecutor(
@@ -118,7 +108,6 @@ st.markdown(f"""
     .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: scroll; margin: 0 auto; width: 80%; }}
     .stTextInput > div > div > input {{ height: 38px; width: 100%; }}
     .stButton button {{ height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }}
-    .input-container {{ position: fixed; bottom: 0; left: 0; width: 100%; background-color: #BACEE0; padding: 10px; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -138,17 +127,17 @@ if submit_button and user_msg:
         'topP': 0.95,
         'topK': 0,
         'maxTokens': 256,
-        'temperature': 0.9,   # 다양성 살림
-        'repeatPenalty': 1.1, # 살짝 올림 (한 단어 반복 방지)
+        'temperature': 0.9,
+        'repeatPenalty': 1.1,
         'stopBefore': [],
-        'includeAiFilters': True,
-        'seed': 0
+        'includeAiFilters': True
+        # 'seed': 0 제거하여 반응이 잘리던 문제 해결
     }
     completion_executor.execute(completion_request)
 
 # 대화 출력 (system 제외, few-shot 예시는 출력에서 제외하려면 [5:] 사용)
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-for message in st.session_state.chat_history[5:]:  # 5번까지는 프롬프트 예시이므로 이후만!
+for message in st.session_state.chat_history[5:]:
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
@@ -163,27 +152,4 @@ for message in st.session_state.chat_history[5:]:  # 5번까지는 프롬프트 
             <div class="message-container">
                 <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 대화 복사 기능 (few-shot 예시는 제외!)
-st.markdown('<div class="input-container">', unsafe_allow_html=True)
-with st.form(key="copy_form"):
-    copy_button = st.form_submit_button(label="복사")
-if copy_button:
-    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[5:]])
-    st.session_state.copied_chat_history = text
-if st.session_state.get('copied_chat_history'):
-    st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
-    st.text_area("", value=st.session_state.copied_chat_history, height=200)
-    js_text = st.session_state.copied_chat_history.replace("\n", "\\n").replace('"', '\\"')
-    st.components.v1.html(f"""
-        <textarea id="copied_chat_history" style="display:none;">{js_text}</textarea>
-        <button onclick="copyToClipboard()">클립보드로 복사</button>
-        <script>
-        function copyToClipboard() {{
-            const text = document.getElementById('copied_chat_history').value.replace(/\\n/g, '\\n');
-            navigator.clipboard.writeText(text).then(() => alert('클립보드로 복사되었습니다!'));
-        }}
-        </script>
-    """, height=100)
 st.markdown('</div>', unsafe_allow_html=True)
