@@ -3,7 +3,7 @@ import requests
 import json
 import random
 
-# Github RAW 이미지 목록
+# ─── 1. 이미지 URL 리스트 ───────────────────────────────────────────────
 image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image2.png",
@@ -16,9 +16,10 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
 
-# 세션 상태 초기화
+# ─── 2. 세션 상태 초기화 ──────────────────────────────────────────────────
 if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
@@ -50,10 +51,11 @@ if "chat_history" not in st.session_state:
         {"role": "assistant", "content": "알겠어."},
         {"role": "assistant", "content": "안녕, 나는 닭야 나에 대해서 궁금한 것이 있니?"}
     ]
+
 if "copied_chat_history" not in st.session_state:
     st.session_state.copied_chat_history = ""
 
-# 페이지 스타일 및 제목
+# ─── 3. 페이지 타이틀 & CSS ─────────────────────────────────────────────
 st.markdown('<h1 class="title">닭과 대화나누기</h1>', unsafe_allow_html=True)
 st.markdown(f"""
 <style>
@@ -78,10 +80,10 @@ st.markdown(f"""
 
 bot_profile_url = st.session_state.selected_image
 
-# 대화 기록 렌더링
+# ─── 4. 대화 기록 출력 ────────────────────────────────────────────────────
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 for msg in st.session_state.chat_history[3:]:
-    is_user = msg["role"] == "user"
+    is_user = (msg["role"] == "user")
     cls = "message-user" if is_user else "message-assistant"
     if is_user:
         st.markdown(f'''
@@ -98,19 +100,19 @@ for msg in st.session_state.chat_history[3:]:
         ''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 입력 폼
+# ─── 5. 입력 폼 ─────────────────────────────────────────────────────────
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 with st.form(key="input_form", clear_on_submit=True):
     user_input = st.text_input("메시지를 입력하세요:", key="input_message")
     submit = st.form_submit_button("전송")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 메시지 전송 및 API 호출 처리
+# ─── 6. 전송 처리 & API 호출 ─────────────────────────────────────────────
 if submit and user_input:
-    # 사용자 메시지 추가
+    # 1) 세션에 사용자 메시지 추가
     st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-    # API 호출 함수
+    # 2) 봇 API 호출 함수
     def call_bot_api(history):
         host = "https://clovastudio.stream.ntruss.com"
         headers = {
@@ -133,14 +135,14 @@ if submit and user_input:
         res.raise_for_status()
         return res.json()["message"]["content"]
 
-    # 답변 추가
+    # 3) 응답 추가
     try:
         reply = call_bot_api(st.session_state.chat_history)
     except Exception as e:
         reply = f"오류 발생: {e}"
     st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
-# 대화 내용 복사 기능
+# ─── 7. 대화 내용 복사 기능 ───────────────────────────────────────────────
 if st.button("대화 내용 복사"):
     hist = "\n".join(f"{m['role']}: {m['content']}"
                      for m in st.session_state.chat_history[3:])
