@@ -11,7 +11,7 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image4.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
-    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
+    "raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
@@ -56,43 +56,41 @@ class CompletionExecutor:
             'Content-Type': 'application/json; charset=utf-8',
             'Accept': 'text/event-stream'
         }
-        # stream=False로 해도 전체 SSE 로그가 r.content에 담겨 옵니다.
         r = requests.post(
-            self._host + '/testapp/v1/chat-completions/HCX-003',
+            f"{self._host}/testapp/v1/chat-completions/HCX-003",
             headers=headers,
             json=completion_request,
             stream=False
         )
-        full_data = r.content.decode('utf-8')
-        assembled = ""
-        for line in full_data.split("\n"):
-            if not line.startswith("data:"):
-                continue
-            data = line[5:].strip()
-            if data == "[DONE]":
-                continue
-            try:
-                msg = json.loads(data)
-                # 각 청크의 'content'를 순서대로 이어붙임
-                assembled += msg["message"]["content"]
-            except Exception as e:
-                st.error(f"API 응답 파싱 오류: {e}")
-        # 한번만 이력에 추가
-        if assembled:
-            st.session_state.chat_history.append({
-                "role": "assistant",
-                "content": assembled
-            })
+        response_data = r.content.decode('utf-8')
+        # 스트리밍된 마지막 청크의 콘텐츠만 사용하도록 처리
+        content_chunk = ''
+        for line in response_data.split("\n"):
+            if line.startswith("data:"):
+                json_data = line[5:]
+                if json_data.strip() == "[DONE]":
+                    continue
+                try:
+                    chat_data = json.loads(json_data)
+                    # 마지막으로 받은 청크의 콘텐츠로 덮어쓰기
+                    content_chunk = chat_data.get("message", {}).get("content", "")
+                except Exception as e:
+                    st.error(f"API 응답 파싱 오류: {e}")
+        # 마지막 청크의 응답을 히스토리에 추가
+        st.session_state.chat_history.append({
+            "role": "assistant",
+            "content": content_chunk.strip()
+        })
 
-# CompletionExecutor 초기화 (본인 키로 교체)
+# CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='YOUR_API_KEY',
-    api_key_primary_val='YOUR_SECONDARY_KEY',
+    api_key_primary_val='YOUR_PRIMARY_VAL',
     request_id='YOUR_REQUEST_ID'
 )
 
-# Streamlit UI 스타일 & 타이틀
+# 스타일 및 타이틀
 st.markdown(
     '<h1 class="title">닭과 대화 나누기</h1>',
     unsafe_allow_html=True
@@ -113,16 +111,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 사용자 입력 폼
+# 입력 폼 및 메시지 처리
 with st.form(key="input_form", clear_on_submit=True):
     user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
     submit_button = st.form_submit_button(label="전송")
 
 if submit_button and user_msg:
-    st.session_state.chat_history.append({
-        "role": "user",
-        "content": user_msg
-    })
+    st.session_state.chat_history.append({"role": "user", "content": user_msg})
     completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.95,
@@ -139,17 +134,41 @@ if submit_button and user_msg:
 # 대화 출력
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 for message in st.session_state.chat_history[5:]:
-    if message["role"] == "assistant":
-        st.markdown(f'''
+    role = "User" if message["role"] == "user" else "Chatbot"
+    profile_url = bot_profile_url if role == "Chatbot" else None
+    css_class = 'message-user' if role == "User" else 'message-assistant'
+    if role == "Chatbot":
+        st.markdown(f"""
             <div class="message-container">
-                <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
-                <div class="message-assistant">{message["content"]}</div>
-            </div>''', unsafe_allow_html=True)
+                <img src="{profile_url}" class="profile-pic" alt="프로필 이미지">
+                <div class="{css_class}">{message["content"]}</div>
+            </div>""", unsafe_allow_html=True)
     else:
-        st.markdown(f'''
+        st.markdown(f"""
             <div class="message-container">
-                <div class="message-user">{message["content"]}</div>
-            </div>''', unsafe_allow_html=True)
+                <div class="{css_class}">{message["content"]}</div>
+            </div>""", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 대화 복사 기능 (생략 가능)
+# 대화 복사 기능
+st.markdown('<div class="input-container">', unsafe_allow_html=True)
+with st.form(key="copy_form"):
+    copy_button = st.form_submit_button(label="복사")
+if copy_button:
+    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[5:]])
+    st.session_state.copied_chat_history = text
+if st.session_state.get('copied_chat_history'):
+    st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
+    st.text_area("", value=st.session_state.copied_chat_history, height=200)
+    js_text = st.session_state.copied_chat_history.replace("\n", "\\n").replace('"', '\\"')
+    st.components.v1.html(f"""
+        <textarea id="copied_chat_history" style="display:none;">{js_text}</textarea>
+        <button onclick="copyToClipboard()">클립보드로 복사</button>
+        <script>
+        function copyToClipboard() {{
+            const text = document.getElementById('copied_chat_history').value.replace(/\\n/g, '\n');
+            navigator.clipboard.writeText(text).then(() => alert('클립보드로 복사되었습니다!'));
+        }}
+        </script>
+    """, height=100)
+st.markdown('</div>', unsafe_allow_html=True)
