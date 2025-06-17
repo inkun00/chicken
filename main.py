@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import json
@@ -61,17 +60,16 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
-        # 첫 번째 유효 응답만 가져와 중복 방지
+        # 모든 data: 조각을 합쳐서 처리
         for line in response_data.split("\n"):
             if line.startswith("data:"):
-                json_data = line[5:]
-                if json_data.strip() == "[DONE]":
-                    continue
+                json_data = line[5:].strip()
+                if json_data == "[DONE]":
+                    break
                 try:
                     chat_data = json.loads(json_data)
-                    content = chat_data.get("message", {}).get("content", "")
-                    full_content = content
-                    break
+                    chunk = chat_data.get("message", {}).get("content", "")
+                    full_content += chunk
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
         if full_content:
