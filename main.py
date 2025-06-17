@@ -21,7 +21,7 @@ if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
 
-# 초기 대화 기록
+# 대화 기록 초기화
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
@@ -83,12 +83,12 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화
+# CompletionExecutor 초기화 (원래 request_id 사용)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='YOUR_API_KEY',
-    api_key_primary_val='YOUR_PRIMARY_KEY',
-    request_id='YOUR_REQUEST_ID'
+    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
+    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
+    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
 # 스타일 및 타이틀
@@ -98,13 +98,15 @@ st.markdown(
 )
 st.markdown("""
 <style>
-body, .main, .block-container { background-color: #BACEE0 !important; }
+body, .main, .block-container {
+    background-color: #BACEE0 !important;
+}
 
-.title { 
-    font-size: 28px !important; 
-    font-weight: bold; 
-    text-align: center; 
-    padding-top: 10px; 
+.title {
+    font-size: 28px !important;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 10px;
 }
 
 .chat-box {
@@ -115,7 +117,8 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-height: 400px;
     overflow-y: auto;
     margin: 0 auto;
-    width: 80%; 
+    width: 100%;               /* 입력창과 동일하게 전체 폭 */
+    box-sizing: border-box;
 }
 
 .message-container {
@@ -132,8 +135,8 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-width: 60%;
     box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-right: auto;    /* ← 왼쪽 정렬 */
-    margin-left: 0;
+    margin-left: 0;            /* 왼쪽 끝으로 붙이기 */
+    margin-right: auto;
 }
 
 .message-user {
@@ -145,7 +148,7 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-width: 60%;
     box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-left: auto;     /* ← 오른쪽 정렬 */
+    margin-left: auto;         /* 오른쪽 끝으로 붙이기 */
     margin-right: 0;
 }
 
