@@ -176,7 +176,7 @@ render_chat()
 # 입력폼: 입력창과 전송 버튼을 한 줄에 나란히
 with st.form(key="input_form", clear_on_submit=True):
     col1, col2 = st.columns([5, 1], gap="small")
-    user_msg = col1.text_input("메시지를 입력하세요:", placeholder="")
+    user_msg = col1.text_input(placeholder="")
     submit_button = col2.form_submit_button(label="전송")
 
 if submit_button and user_msg:
