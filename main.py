@@ -5,7 +5,7 @@ import json
 import random
 import re
 
-# 🐔 닭 이미지 (지렁이 아님!)
+# 🐔 닭 이미지
 image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image2.png",
@@ -21,7 +21,7 @@ if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
 
-# 대화 기록 초기화
+# 초기 대화 기록
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
@@ -86,9 +86,9 @@ class CompletionExecutor:
 # CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
-    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
-    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
+    api_key='YOUR_API_KEY',
+    api_key_primary_val='YOUR_PRIMARY_KEY',
+    request_id='YOUR_REQUEST_ID'
 )
 
 # 스타일 및 타이틀
@@ -115,8 +115,7 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-height: 400px;
     overflow-y: auto;
     margin: 0 auto;
-    width: 100%;              /* ← 입력창과 동일하게 전체 폭으로 */
-    box-sizing: border-box;
+    width: 80%; 
 }
 
 .message-container {
@@ -125,27 +124,29 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     align-items: center;
 }
 
+.message-assistant {
+    background-color: #FFFFFF;
+    text-align: left;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 60%;
+    box-sizing: border-box;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    margin-right: auto;    /* ← 왼쪽 정렬 */
+    margin-left: 0;
+}
+
 .message-user {
     background-color: #FFEB33;
     color: black;
     text-align: right;
     padding: 10px;
     border-radius: 10px;
-    width: 100%;               /* ← 좌우 꽉 채우기 */
+    max-width: 60%;
     box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin: 0;                 /* ← 좌우 여백 제거 */
-}
-
-.message-assistant {
-    background-color: #FFFFFF;
-    text-align: left;
-    padding: 10px;
-    border-radius: 10px;
-    width: 100%;               /* ← 좌우 꽉 채우기 */
-    box-sizing: border-box;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin: 0;                 /* ← 좌우 여백 제거 */
+    margin-left: auto;     /* ← 오른쪽 정렬 */
+    margin-right: 0;
 }
 
 .profile-pic {
@@ -171,8 +172,6 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
 """, unsafe_allow_html=True)
 
 bot_profile_url = selected_image
-
-# 채팅 출력용 placeholder 생성
 chat_placeholder = st.empty()
 
 def render_chat():
@@ -190,9 +189,7 @@ def render_chat():
     <div class="message-user">{msg["content"]}</div>
 </div>'''
     html += '</div>'
-
     chat_placeholder.markdown(html, unsafe_allow_html=True)
-
     # 자동 스크롤
     components.html(
         """
@@ -205,8 +202,7 @@ def render_chat():
         }, 100);
         </script>
         """,
-        height=0,
-        width=0,
+        height=0, width=0,
     )
 
 # 초기 렌더링
@@ -217,7 +213,6 @@ with st.form(key="input_form", clear_on_submit=True):
     user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
     submit_button = st.form_submit_button(label="전송")
 
-# 전송 처리
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
     completion_request = {
