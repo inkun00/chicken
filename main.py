@@ -59,25 +59,30 @@ class CompletionExecutor:
             json=completion_request,
             stream=False
         )
+        response_data = r.content.decode('utf-8')
         full_content = ""
-        for line in r.content.decode('utf-8').splitlines():
+        for line in response_data.split("\n"):
             if line.startswith("data:"):
-                chunk = line[5:].strip()
-                if chunk == "[DONE]":
+                json_data = line[5:].strip()
+                if json_data == "[DONE]":
                     break
                 try:
-                    msg = json.loads(chunk).get("message", {}).get("content", "")
-                    full_content += msg
-                except:
+                    chat_data = json.loads(json_data)
+                    chunk = chat_data.get("message", {}).get("content", "")
+                    full_content += chunk
+                except Exception:
                     pass
-        # 중복응답 제거
+        # 중복 제거
         m = re.match(r'^(?P<part>.+)\1$', full_content, flags=re.DOTALL)
         if m:
             full_content = m.group('part')
         if full_content:
-            st.session_state.chat_history.append({"role": "assistant", "content": full_content.strip()})
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": full_content.strip()
+            })
 
-# request_id 원본 유지
+# CompletionExecutor 초기화 (request_id 변경 없음)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -160,21 +165,23 @@ def render_chat():
 # 최초 렌더링
 render_chat()
 
-# ─── 입력폼: 컬럼 비율 [20,1], gap="none", 빈 줄 두 개로 버튼 수직 위치 조정 ───
+# 입력폼: 컬럼 비율 [20,1], gap="small"
 with st.form(key="input_form", clear_on_submit=True):
-    col1, col2 = st.columns([20, 1], gap="none")
+    col1, col2 = st.columns([20, 1], gap="small")
+    # (1) 왼쪽: 텍스트 입력창
     user_msg = col1.text_input("메시지를 입력하세요:", placeholder="")
-    # 버튼을 더 아래로 내리기 위한 빈 줄
+    # (2) 오른쪽: 버튼을 아래로 내리기 위한 빈 줄 두 줄
     col2.markdown("<br><br>", unsafe_allow_html=True)
+    # (3) 빈 줄 아래에 전송 버튼
     submit_button = col2.form_submit_button(label="전송")
 
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
-    req = {
+    completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.95, 'topK': 0, 'maxTokens': 256,
         'temperature': 0.9, 'repeatPenalty': 1.1,
         'stopBefore': [], 'includeAiFilters': True
     }
-    completion_executor.execute(req)
+    completion_executor.execute(completion_request)
     render_chat()
