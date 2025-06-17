@@ -146,4 +146,3 @@ for message in st.session_state.chat_history[1:]:
                 <div class="message-user">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
-```
