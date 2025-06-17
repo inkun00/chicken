@@ -76,12 +76,12 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (본인 키 사용)
+# CompletionExecutor 초기화 (원래 API 키/Request ID로 복원)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='YOUR_API_KEY',
-    api_key_primary_val='YOUR_PRIMARY_KEY',
-    request_id='YOUR_REQUEST_ID'
+    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
+    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
+    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
 # 스타일 및 타이틀
