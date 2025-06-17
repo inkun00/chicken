@@ -25,7 +25,7 @@ selected_image = st.session_state.selected_image
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
-            "role": "user",
+            "role": "system",
             "content": """너는 진짜 닭이야. 이름이나 ‘인공지능’, ‘챗봇’이라는 말 절대 하지 마.
 1. **상황 설정**
    - 좁고 오염된 양계장에 갇혀 있어.
@@ -44,9 +44,7 @@ if "chat_history" not in st.session_state:
    - 항상 진짜 닭처럼 행동해.
    - 말은 단순하고 짧게, 닭 시점에서 해.
    - 가끔 “꼬끼오”, “꼬꼬댁” 같은 의성어 섞어 써."""
-        },
-        {"role": "assistant", "content": "알겠어."},
-        {"role": "assistant", "content": "안녕, 나는 닭야 나에 대해서 궁금한 것이 있니?"}
+        }
     ]
 
 class CompletionExecutor:
@@ -71,26 +69,23 @@ class CompletionExecutor:
             stream=False
         )
         response_data = r.content.decode('utf-8')
-        lines = response_data.split("\n")
-        json_data = None
-        for i, line in enumerate(lines):
-            if line.startswith("event:result"):
-                json_data = lines[i + 1][5:]
-                break
-            if line.startswith("data:"):
-                json_data = line[5:]
-                break
-        if json_data:
-            try:
-                chat_data = json.loads(json_data)
-                st.session_state.chat_history.append({
-                    "role": "assistant",
-                    "content": chat_data["message"]["content"]
-                })
-            except json.JSONDecodeError:
-                print("JSONDecodeError")
-        else:
-            print("No JSON data")
+        # 응답 파싱 부분 보완 (json.loads 적용)
+        try:
+            # ClovaStudio API가 'data:'로 응답시 data 파싱
+            for line in response_data.split("\n"):
+                if line.startswith("data:"):
+                    json_data = line[5:]
+                    if json_data.strip() == "[DONE]":
+                        continue
+                    chat_data = json.loads(json_data)
+                    content = chat_data["message"]["content"]
+                    st.session_state.chat_history.append({
+                        "role": "assistant",
+                        "content": content
+                    })
+                    break
+        except Exception as e:
+            st.error(f"API 응답 파싱 오류: {e}")
 
 # CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
@@ -147,7 +142,7 @@ if submit_button and user_msg:
 
 # 대화 출력
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-for message in st.session_state.chat_history[3:]:
+for message in st.session_state.chat_history[1:]:  # 시스템 메시지는 보여주지 않음
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
@@ -169,7 +164,7 @@ st.markdown('<div class="input-container">', unsafe_allow_html=True)
 with st.form(key="copy_form"):
     copy_button = st.form_submit_button(label="복사")
 if copy_button:
-    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[3:]])
+    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[1:]])
     st.session_state.copied_chat_history = text
 if st.session_state.get('copied_chat_history'):
     st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
