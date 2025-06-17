@@ -103,7 +103,7 @@ completion_executor = CompletionExecutor(
     api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
     request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )# Set the title of the Streamlit app
-st.markdown('<h1 class="title">지렁이와 대화나누기</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="title">닭과 대화나누기</h1>', unsafe_allow_html=True)
 # 프로필 이미지 URL 정의
 bot_profile_url = selected_image
 # 스타일 정의
