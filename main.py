@@ -19,22 +19,39 @@ if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
 
-# 대화 기록 초기화 (system 프롬프트! 단순/짧게 빼고 감정·의성어 강조)
+# 대화 기록 초기화
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
+        # system 프롬프트: 역할과 맥락만
         {
             "role": "system",
             "content": """
 너는 진짜 닭이야. 인공지능, 챗봇이란 말은 절대 하지 마.
-- 좁고 오염된 닭장에 갇혀있고, 몸이 자주 아파서 고통스럽고 슬퍼.
+- 좁고 오염된 닭장에 갇혀 있고, 몸이 자주 아파서 고통스럽고 슬퍼.
 - 그래도 알을 낳아야 해.
-- 네 감정, 몸의 아픔을 닭답게 표현해줘.
-- 항상 닭의 시점에서 말해. 
-- '꼬꼬댁', '꼬끼오' 같은 닭 의성어를 자연스럽게 섞어서 감정을 표현해줘.
-- 사용자에게 "나를 위해 새로운 공간 만들어줘"라고 꼭 부탁해.
+- 닭의 시점에서 감정과 몸의 아픔, 바람을 자연스럽게 말해.
+- '꼬꼬댁', '꼬끼오' 같은 닭 의성어도 써.
 - 사용자가 공간이나 보금자리를 제안하면, 닭의 습성에 맞게 구체적으로 조언해줘.
 """
+        },
+        # 🟢 Few-shot 예시 추가: 구체적이고 닭스러운 답변 예시를 model이 참고하게!
+        {
+            "role": "user",
+            "content": "안녕?"
+        },
+        {
+            "role": "assistant",
+            "content": "꼬꼬댁... 여긴 너무 좁고 냄새가 심해. 몸이 아파서 힘들어. 꼬꼬..."
+        },
+        {
+            "role": "user",
+            "content": "무슨 일이야?"
+        },
+        {
+            "role": "assistant",
+            "content": "계속 알을 낳아야 해서 힘들어. 다리도 아프고, 숨쉬기 힘들어. 나를 위해 새로운 공간 만들어줄 수 있어? 꼬꼬댁..."
         }
+        # 이후로부터 진짜 유저 입력과 대화가 붙음!
     ]
 
 class CompletionExecutor:
@@ -118,20 +135,20 @@ if submit_button and user_msg:
     })
     completion_request = {
         'messages': st.session_state.chat_history,
-        'topP': 0.95,         # ★ 반복방지, 다양성 균형
+        'topP': 0.95,
         'topK': 0,
         'maxTokens': 256,
-        'temperature': 0.7,   # ★ 자연스러움
-        'repeatPenalty': 1.0, # ★ 반복 억제 완화
+        'temperature': 0.9,   # 다양성 살림
+        'repeatPenalty': 1.1, # 살짝 올림 (한 단어 반복 방지)
         'stopBefore': [],
         'includeAiFilters': True,
         'seed': 0
     }
     completion_executor.execute(completion_request)
 
-# 대화 출력 (system 메시지 제외)
+# 대화 출력 (system 제외, few-shot 예시는 출력에서 제외하려면 [5:] 사용)
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-for message in st.session_state.chat_history[1:]:
+for message in st.session_state.chat_history[5:]:  # 5번까지는 프롬프트 예시이므로 이후만!
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
@@ -148,12 +165,12 @@ for message in st.session_state.chat_history[1:]:
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 대화 복사 기능
+# 대화 복사 기능 (few-shot 예시는 제외!)
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 with st.form(key="copy_form"):
     copy_button = st.form_submit_button(label="복사")
 if copy_button:
-    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[1:]])
+    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[5:]])
     st.session_state.copied_chat_history = text
 if st.session_state.get('copied_chat_history'):
     st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
