@@ -5,6 +5,9 @@ import json
 import random
 import re
 
+# 페이지 설정
+st.set_page_config(page_title="닭과 대화 나누기", layout="wide")
+
 # 🐔 닭 이미지 (지렁이 아님!)
 image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
@@ -83,7 +86,7 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (원래 request_id 유지)
+# CompletionExecutor 초기화 (request_id 변경 없음)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -91,12 +94,8 @@ completion_executor = CompletionExecutor(
     request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
-# 페이지 스타일 및 타이틀
-st.set_page_config(page_title="닭과 대화 나누기", layout="wide")
-st.markdown(
-    '<h1 class="title">닭과 대화 나누기</h1>',
-    unsafe_allow_html=True
-)
+# 스타일 및 타이틀
+st.markdown('<h1 class="title">닭과 대화 나누기</h1>', unsafe_allow_html=True)
 st.markdown("""
 <style>
 body, .main, .block-container { background-color: #BACEE0 !important; }
@@ -121,7 +120,6 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     padding: 10px;
     border-radius: 10px;
     max-width: 60%;
-    box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     margin-left: 0; margin-right: auto;
 }
@@ -133,7 +131,6 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     padding: 10px;
     border-radius: 10px;
     max-width: 60%;
-    box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     margin-left: auto; margin-right: 0;
 }
@@ -173,11 +170,16 @@ def render_chat():
 # 초기 렌더링
 render_chat()
 
-# 입력폼: 입력창과 전송 버튼을 한 줄에 나란히
+# ─── 입력폼: 버튼 위에 빈칸 추가 ─────────────────────────────
 with st.form(key="input_form", clear_on_submit=True):
     col1, col2 = st.columns([5, 1], gap="small")
+    # (1) 왼쪽: 텍스트 입력창
     user_msg = col1.text_input("메시지를 입력하세요:", placeholder="")
+    # (2) 오른쪽: 빈칸 한 줄
+    col2.write("")  
+    # (3) 빈칸 아래에 전송 버튼
     submit_button = col2.form_submit_button(label="전송")
+# ─────────────────────────────────────────────────────────
 
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
