@@ -99,14 +99,74 @@ st.markdown(
 st.markdown("""
 <style>
 body, .main, .block-container { background-color: #BACEE0 !important; }
-.title { font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }
-.message-container { display: flex; margin-bottom: 10px; align-items: center; }
-.message-user { background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
-.message-assistant { background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
-.profile-pic { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
-.chat-box { background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; margin: 0 auto; width: 80%; }
-.stTextInput > div > div > input { height: 38px; width: 100%; }
-.stButton button { height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }
+
+.title { 
+    font-size: 28px !important; 
+    font-weight: bold; 
+    text-align: center; 
+    padding-top: 10px; 
+}
+
+.chat-box {
+    background-color: #BACEE0;
+    border: none;
+    padding: 20px;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 0 auto;
+    width: 100%;              /* ← 입력창과 동일하게 전체 폭으로 */
+    box-sizing: border-box;
+}
+
+.message-container {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.message-user {
+    background-color: #FFEB33;
+    color: black;
+    text-align: right;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;               /* ← 좌우 꽉 채우기 */
+    box-sizing: border-box;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    margin: 0;                 /* ← 좌우 여백 제거 */
+}
+
+.message-assistant {
+    background-color: #FFFFFF;
+    text-align: left;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;               /* ← 좌우 꽉 채우기 */
+    box-sizing: border-box;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    margin: 0;                 /* ← 좌우 여백 제거 */
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.stTextInput > div > div > input {
+    height: 38px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stButton button {
+    height: 38px !important;
+    width: 70px !important;
+    padding: 0 10px;
+    margin-right: 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,7 +176,6 @@ bot_profile_url = selected_image
 chat_placeholder = st.empty()
 
 def render_chat():
-    # HTML 문자열로 조립 (id="chat-box" 추가)
     html = '<div class="chat-box" id="chat-box">'
     for msg in st.session_state.chat_history[1:]:
         if msg["role"] == "assistant":
@@ -132,10 +191,9 @@ def render_chat():
 </div>'''
     html += '</div>'
 
-    # 화면에 렌더링
     chat_placeholder.markdown(html, unsafe_allow_html=True)
 
-    # 자동 스크롤: 새 메시지 생길 때마다 맨 아래로 이동
+    # 자동 스크롤
     components.html(
         """
         <script>
