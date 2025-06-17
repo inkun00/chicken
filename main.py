@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import json
 import random
@@ -60,7 +61,6 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
-        # 모든 data: 조각을 합쳐서 처리
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:].strip()
@@ -83,7 +83,7 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (원본 API 키/Request ID 사용)
+# CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -116,8 +116,8 @@ bot_profile_url = selected_image
 chat_placeholder = st.empty()
 
 def render_chat():
-    # HTML 문자열로 한 번에 조립
-    html = '<div class="chat-box">'
+    # HTML 문자열로 조립 (id="chat-box" 추가)
+    html = '<div class="chat-box" id="chat-box">'
     for msg in st.session_state.chat_history[1:]:
         if msg["role"] == "assistant":
             html += f'''
@@ -131,9 +131,27 @@ def render_chat():
     <div class="message-user">{msg["content"]}</div>
 </div>'''
     html += '</div>'
+
+    # 화면에 렌더링
     chat_placeholder.markdown(html, unsafe_allow_html=True)
 
-# 초기 렌더링: 입력창 위에 대화 표시
+    # 자동 스크롤: 새 메시지 생길 때마다 맨 아래로 이동
+    components.html(
+        """
+        <script>
+        setTimeout(function() {
+            var box = window.parent.document.getElementById('chat-box');
+            if (box) {
+                box.scrollTop = box.scrollHeight;
+            }
+        }, 100);
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+# 초기 렌더링
 render_chat()
 
 # 입력 폼
