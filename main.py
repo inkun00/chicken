@@ -83,17 +83,17 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화
+# CompletionExecutor 초기화 (원래 API 키/Request ID 사용)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='YOUR_API_KEY',
-    api_key_primary_val='YOUR_PRIMARY_KEY',
-    request_id='YOUR_REQUEST_ID'
+    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
+    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
+    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
 # 스타일 및 타이틀
 st.markdown(
-    '<h1 class="title">닭과 대화 나누기</h1>', unsafe_allow_html=True
+    '<h1 class=\"title\">닭과 대화 나누기</h1>', unsafe_allow_html=True
 )
 st.markdown(f"""
     <style>
@@ -115,18 +115,18 @@ bot_profile_url = selected_image
 chat_placeholder = st.empty()
 
 def render_chat():
-    chat_placeholder.markdown('<div class="chat-box">', unsafe_allow_html=True)
+    chat_placeholder.markdown('<div class=\"chat-box\">', unsafe_allow_html=True)
     for message in st.session_state.chat_history[1:]:
         if message["role"] == "assistant":
-            chat_placeholder.markdown(f'''
-                <div class="message-container">
-                    <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
-                    <div class="message-assistant">{message["content"]}</div>
+            chat_placeholder.markdown(f'''\
+                <div class=\"message-container\">\
+                    <img src=\"{bot_profile_url}\" class=\"profile-pic\" alt=\"프로필 이미지\">\
+                    <div class=\"message-assistant\">{message["content"]}</div>\
                 </div>''', unsafe_allow_html=True)
         else:
-            chat_placeholder.markdown(f'''
-                <div class="message-container">
-                    <div class="message-user">{message["content"]}</div>
+            chat_placeholder.markdown(f'''\
+                <div class=\"message-container\">\
+                    <div class=\"message-user\">{message["content"]}</div>\
                 </div>''', unsafe_allow_html=True)
     chat_placeholder.markdown('</div>', unsafe_allow_html=True)
 
@@ -134,13 +134,13 @@ def render_chat():
 render_chat()
 
 # 입력 폼
-with st.form(key="input_form", clear_on_submit=True):
-    user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
-    submit_button = st.form_submit_button(label="전송")
+with st.form(key=\"input_form\", clear_on_submit=True):
+    user_msg = st.text_input(\"메시지를 입력하세요:\", placeholder=\"\")
+    submit_button = st.form_submit_button(label=\"전송\")
 
 # 전송 처리
 if submit_button and user_msg:
-    st.session_state.chat_history.append({"role": "user", "content": user_msg})
+    st.session_state.chat_history.append({\"role\": \"user\", \"content\": user_msg})
     completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.95,
