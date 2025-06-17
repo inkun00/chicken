@@ -27,9 +27,7 @@ selected_image = st.session_state.selected_image
 # 대화 기록 초기화
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {
-            "role": "system",
-            "content": """
+        {"role": "system", "content": """
 너는 진짜 닭이야. 인공지능, 챗봇이란 말은 절대 하지 마.
 - 좁고 오염된 닭장에 갇혀 있고, 몸이 자주 아파서 고통스럽고 슬퍼.
 - 그래도 알을 낳아야 해.
@@ -37,8 +35,7 @@ if "chat_history" not in st.session_state:
 - '꼬꼬댁', '꼬끼오' 같은 닭 의성어도 써.
 - 사용자가 공간이나 보금자리를 제안하면, 닭의 습성에 맞게 구체적으로 조언해줘.
 - 모든 응답은 최대 3문장 이내로 작성할 것.
-"""
-        }
+"""}
     ]
 
 class CompletionExecutor:
@@ -62,31 +59,25 @@ class CompletionExecutor:
             json=completion_request,
             stream=False
         )
-        response_data = r.content.decode('utf-8')
         full_content = ""
-        for line in response_data.split("\n"):
+        for line in r.content.decode('utf-8').splitlines():
             if line.startswith("data:"):
-                json_data = line[5:].strip()
-                if json_data == "[DONE]":
+                chunk = line[5:].strip()
+                if chunk == "[DONE]":
                     break
                 try:
-                    chat_data = json.loads(json_data)
-                    chunk = chat_data.get("message", {}).get("content", "")
-                    full_content += chunk
-                except Exception as e:
-                    st.error(f"API 응답 파싱 오류: {e}")
-        # 중복 제거
+                    msg = json.loads(chunk).get("message", {}).get("content", "")
+                    full_content += msg
+                except:
+                    pass
+        # 중복응답 제거
         m = re.match(r'^(?P<part>.+)\1$', full_content, flags=re.DOTALL)
         if m:
             full_content = m.group('part')
-
         if full_content:
-            st.session_state.chat_history.append({
-                "role": "assistant",
-                "content": full_content.strip()
-            })
+            st.session_state.chat_history.append({"role": "assistant", "content": full_content.strip()})
 
-# CompletionExecutor 초기화 (request_id 변경 없음)
+# request_id 원본 유지
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -102,37 +93,36 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
 .title { font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }
 
 .chat-box {
-    background-color: #BACEE0;
-    border: none;
-    padding: 20px;
-    border-radius: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-    margin: 0 auto;
-    width: 80%;
+  background-color: #BACEE0;
+  border: none;
+  padding: 20px;
+  border-radius: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 0 auto;
+  width: 80%;
 }
 
 .message-container { display: flex; margin-bottom: 10px; align-items: center; }
 
 .message-assistant {
-    background-color: #FFFFFF;
-    text-align: left;
-    padding: 10px;
-    border-radius: 10px;
-    max-width: 60%;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-left: 0; margin-right: auto;
+  background-color: #FFFFFF;
+  text-align: left;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 60%;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+  margin-left: 0; margin-right: auto;
 }
 
 .message-user {
-    background-color: #FFEB33;
-    color: black;
-    text-align: right;
-    padding: 10px;
-    border-radius: 10px;
-    max-width: 60%;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-left: auto; margin-right: 0;
+  background-color: #FFEB33;
+  text-align: right;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 60%;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+  margin-left: auto; margin-right: 0;
 }
 
 .profile-pic { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
@@ -147,51 +137,44 @@ def render_chat():
     for msg in st.session_state.chat_history[1:]:
         if msg["role"] == "assistant":
             html += f'''
-<div class="message-container">
-  <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
-  <div class="message-assistant">{msg["content"]}</div>
-</div>'''
+  <div class="message-container">
+    <img src="{bot_profile_url}" class="profile-pic" alt="">
+    <div class="message-assistant">{msg["content"]}</div>
+  </div>'''
         else:
             html += f'''
-<div class="message-container">
-  <div class="message-user">{msg["content"]}</div>
-</div>'''
+  <div class="message-container">
+    <div class="message-user">{msg["content"]}</div>
+  </div>'''
     html += '</div>'
     chat_placeholder.markdown(html, unsafe_allow_html=True)
     components.html("""
     <script>
-      setTimeout(function() {
-        var box = window.parent.document.getElementById('chat-box');
-        if (box) { box.scrollTop = box.scrollHeight; }
+      setTimeout(()=>{
+        const box = window.parent.document.getElementById('chat-box');
+        if(box) box.scrollTop = box.scrollHeight;
       }, 100);
     </script>
-    """, height=0, width=0)
+    """, height=0)
 
-# 초기 렌더링
+# 최초 렌더링
 render_chat()
 
-# ─── 입력폼: 버튼 위에 빈칸 추가 ─────────────────────────────
+# ─── 입력폼: 컬럼 비율 [20,1], gap="none", 빈 줄 두 개로 버튼 수직 위치 조정 ───
 with st.form(key="input_form", clear_on_submit=True):
-    col1, col2 = st.columns([5, 1], gap="small")
-    # (1) 왼쪽: 텍스트 입력창
+    col1, col2 = st.columns([20, 1], gap="none")
     user_msg = col1.text_input("메시지를 입력하세요:", placeholder="")
-    # (2) 오른쪽: 빈칸 한 줄
-    col2.write("")  
-    # (3) 빈칸 아래에 전송 버튼
+    # 버튼을 더 아래로 내리기 위한 빈 줄
+    col2.markdown("<br><br>", unsafe_allow_html=True)
     submit_button = col2.form_submit_button(label="전송")
-# ─────────────────────────────────────────────────────────
 
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
-    completion_request = {
+    req = {
         'messages': st.session_state.chat_history,
-        'topP': 0.95,
-        'topK': 0,
-        'maxTokens': 256,
-        'temperature': 0.9,
-        'repeatPenalty': 1.1,
-        'stopBefore': [],
-        'includeAiFilters': True
+        'topP': 0.95, 'topK': 0, 'maxTokens': 256,
+        'temperature': 0.9, 'repeatPenalty': 1.1,
+        'stopBefore': [], 'includeAiFilters': True
     }
-    completion_executor.execute(completion_request)
+    completion_executor.execute(req)
     render_chat()
