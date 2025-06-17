@@ -214,7 +214,8 @@ render_chat()
 # 입력 폼
 with st.form(key="input_form", clear_on_submit=True):
     user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
-    submit_button = st.form_submit_button(label="전송")
+    col1, col2 = st.columns([9, 1])
+    submit_button = col2.form_submit_button(label="전송")
 
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
