@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import json
 import random
+import re
 
 # 🐔 닭 이미지 (지렁이 아님!)
 image_urls = [
@@ -22,7 +23,6 @@ selected_image = st.session_state.selected_image
 # 대화 기록 초기화
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        # system 프롬프트: 역할과 맥락만
         {
             "role": "system",
             "content": """
@@ -72,6 +72,11 @@ class CompletionExecutor:
                     full_content += chunk
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
+        # 만약 전체가 두 번 반복된 형태면 중복 제거
+        m = re.match(r'^(?P<part>.+)\1$', full_content, flags=re.DOTALL)
+        if m:
+            full_content = m.group('part')
+
         if full_content:
             st.session_state.chat_history.append({
                 "role": "assistant",
