@@ -11,7 +11,7 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image4.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
-    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
+    "raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
@@ -85,9 +85,9 @@ class CompletionExecutor:
 # CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='YOUR_API_KEY',
-    api_key_primary_val='YOUR_PRIMARY_VAL',
-    request_id='YOUR_REQUEST_ID'
+    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
+    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
+    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
 # 스타일 및 타이틀
