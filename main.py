@@ -13,8 +13,8 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
-    "raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
-    "raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
 if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
@@ -72,7 +72,7 @@ class CompletionExecutor:
                     full_content += chunk
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
-        # 만약 전체가 두 번 반복된 형태면 중복 제거
+        # 중복 제거
         m = re.match(r'^(?P<part>.+)\1$', full_content, flags=re.DOTALL)
         if m:
             full_content = m.group('part')
@@ -83,18 +83,17 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (원래 API 키/Request ID로 복원)
+# CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
-    api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
-    api_key_primary_val='DilhGClorcZK5OTo1QgdfoDQnBNOkNaNksvlAVFE',
-    request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
+    api_key='YOUR_API_KEY',
+    api_key_primary_val='YOUR_PRIMARY_KEY',
+    request_id='YOUR_REQUEST_ID'
 )
 
 # 스타일 및 타이틀
 st.markdown(
-    '<h1 class="title">닭과 대화 나누기</h1>',
-    unsafe_allow_html=True
+    '<h1 class="title">닭과 대화 나누기</h1>', unsafe_allow_html=True
 )
 st.markdown(f"""
     <style>
@@ -104,14 +103,15 @@ st.markdown(f"""
     .message-user {{ background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .message-assistant {{ background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .profile-pic {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }}
-    .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: scroll; margin: 0 auto; width: 80%; }}
+    .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; margin: 0 auto; width: 80%; }}
     .stTextInput > div > div > input {{ height: 38px; width: 100%; }}
     .stButton button {{ height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }}
     </style>
 """, unsafe_allow_html=True)
+
 bot_profile_url = selected_image
 
-# 대화 출력용 placeholder 생성
+# 채팅 출력용 placeholder 생성
 chat_placeholder = st.empty()
 
 def render_chat():
@@ -130,17 +130,17 @@ def render_chat():
                 </div>''', unsafe_allow_html=True)
     chat_placeholder.markdown('</div>', unsafe_allow_html=True)
 
+# 초기 렌더링: 입력창 위에 대화 표시
+render_chat()
+
 # 입력 폼
 with st.form(key="input_form", clear_on_submit=True):
     user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
     submit_button = st.form_submit_button(label="전송")
 
-# 메시지 전송 처리
+# 전송 처리
 if submit_button and user_msg:
-    st.session_state.chat_history.append({
-        "role": "user",
-        "content": user_msg
-    })
+    st.session_state.chat_history.append({"role": "user", "content": user_msg})
     completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.95,
@@ -152,6 +152,5 @@ if submit_button and user_msg:
         'includeAiFilters': True
     }
     completion_executor.execute(completion_request)
-
-# 채팅 내용 렌더링 (입력창 위)
-render_chat()
+    # 갱신 렌더링
+    render_chat()
