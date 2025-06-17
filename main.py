@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import json
 import random
+import re  # 문장 분리를 위해 추가
 
 # 🐔 닭 이미지 (지렁이 아님!)
 image_urls = [
@@ -63,7 +64,6 @@ class CompletionExecutor:
             stream=False
         )
         response_data = r.content.decode('utf-8')
-        # SSE 형식으로 오는 모든 청크를 합쳐서 처리
         full_content = ""
         for line in response_data.split("\n"):
             if line.startswith("data:"):
@@ -72,15 +72,16 @@ class CompletionExecutor:
                     continue
                 try:
                     chat_data = json.loads(json_data)
-                    # 각 청크의 content를 누적
                     full_content += chat_data.get("message", {}).get("content", "")
                 except Exception as e:
                     st.error(f"API 응답 파싱 오류: {e}")
-        # 최종 누적된 응답 추가
         if full_content:
+            # 3문장 이내로 줄이기
+            sentences = re.split(r'(?<=[.!?])\s+', full_content)
+            short_content = ' '.join(sentences[:3]).strip()
             st.session_state.chat_history.append({
                 "role": "assistant",
-                "content": full_content
+                "content": short_content
             })
 
 # CompletionExecutor 초기화 (아래 키는 예시, 본인 키 사용)
@@ -105,7 +106,7 @@ st.markdown(f"""
     .message-user {{ background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .message-assistant {{ background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .profile-pic {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }}
-    .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: scroll; margin: 0 auto; width: 80%; }}
+    .chat-box {{ background-color': '#BACEE0'; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: scroll; margin: 0 auto; width: 80%; }}
     .stTextInput > div > div > input {{ height: 38px; width: 100%; }}
     .stButton button {{ height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }}
     </style>
@@ -131,25 +132,22 @@ if submit_button and user_msg:
         'repeatPenalty': 1.1,
         'stopBefore': [],
         'includeAiFilters': True
-        # 'seed': 0 제거하여 반응이 잘리던 문제 해결
     }
     completion_executor.execute(completion_request)
 
-# 대화 출력 (system 제외, few-shot 예시는 출력에서 제외하려면 [5:] 사용)
+# 대화 출력
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 for message in st.session_state.chat_history[5:]:
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
     if role == "Chatbot":
-        st.markdown(f'''
-            <div class="message-container">
+        st.markdown(f'''<div class="message-container">
                 <img src="{profile_url}" class="profile-pic" alt="프로필 이미지">
                 <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
     else:
-        st.markdown(f'''
-            <div class="message-container">
+        st.markdown(f'''<div class="message-container">
                 <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
