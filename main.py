@@ -60,7 +60,6 @@ class CompletionExecutor:
         )
         response_data = r.content.decode('utf-8')
         full_content = ""
-        # 모든 data: 조각을 합쳐서 처리
         for line in response_data.split("\n"):
             if line.startswith("data:"):
                 json_data = line[5:].strip()
@@ -83,7 +82,7 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (원래 API 키/Request ID 사용)
+# CompletionExecutor 초기화 (원본 API 키/Request ID 사용)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -93,54 +92,55 @@ completion_executor = CompletionExecutor(
 
 # 스타일 및 타이틀
 st.markdown(
-    '<h1 class=\"title\">닭과 대화 나누기</h1>', unsafe_allow_html=True
+    '<h1 class="title">닭과 대화 나누기</h1>',
+    unsafe_allow_html=True
 )
-st.markdown(f"""
-    <style>
-    body, .main, .block-container {{ background-color: #BACEE0 !important; }}
-    .title {{ font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }}
-    .message-container {{ display: flex; margin-bottom: 10px; align-items: center; }}
-    .message-user {{ background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
-    .message-assistant {{ background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
-    .profile-pic {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }}
-    .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; margin: 0 auto; width: 80%; }}
-    .stTextInput > div > div > input {{ height: 38px; width: 100%; }}
-    .stButton button {{ height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }}
-    </style>
+st.markdown("""
+<style>
+body, .main, .block-container { background-color: #BACEE0 !important; }
+.title { font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }
+.message-container { display: flex; margin-bottom: 10px; align-items: center; }
+.message-user { background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
+.message-assistant { background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
+.profile-pic { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+.chat-box { background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; margin: 0 auto; width: 80%; }
+.stTextInput > div > div > input { height: 38px; width: 100%; }
+.stButton button { height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }
+</style>
 """, unsafe_allow_html=True)
 
 bot_profile_url = selected_image
-
 # 채팅 출력용 placeholder 생성
 chat_placeholder = st.empty()
 
 def render_chat():
-    chat_placeholder.markdown('<div class=\"chat-box\">', unsafe_allow_html=True)
-    for message in st.session_state.chat_history[1:]:
-        if message["role"] == "assistant":
-            chat_placeholder.markdown(f'''\
-                <div class=\"message-container\">\
-                    <img src=\"{bot_profile_url}\" class=\"profile-pic\" alt=\"프로필 이미지\">\
-                    <div class=\"message-assistant\">{message["content"]}</div>\
-                </div>''', unsafe_allow_html=True)
+    chat_html = '<div class="chat-box">'
+    for msg in st.session_state.chat_history[1:]:
+        if msg["role"] == "assistant":
+            chat_html += f"""
+<div class="message-container">
+    <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
+    <div class="message-assistant">{msg["content"]}</div>
+</div>"""
         else:
-            chat_placeholder.markdown(f'''\
-                <div class=\"message-container\">\
-                    <div class=\"message-user\">{message["content"]}</div>\
-                </div>''', unsafe_allow_html=True)
-    chat_placeholder.markdown('</div>', unsafe_allow_html=True)
+            chat_html += f"""
+<div class="message-container">
+    <div class="message-user">{msg["content"]}</div>
+</div>"""
+    chat_html += '</div>'
+    chat_placeholder.markdown(chat_html, unsafe_allow_html=True)
 
 # 초기 렌더링: 입력창 위에 대화 표시
 render_chat()
 
 # 입력 폼
-with st.form(key=\"input_form\", clear_on_submit=True):
-    user_msg = st.text_input(\"메시지를 입력하세요:\", placeholder=\"\")
-    submit_button = st.form_submit_button(label=\"전송\")
+with st.form(key="input_form", clear_on_submit=True):
+    user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
+    submit_button = st.form_submit_button(label="전송")
 
 # 전송 처리
 if submit_button and user_msg:
-    st.session_state.chat_history.append({\"role\": \"user\", \"content\": user_msg})
+    st.session_state.chat_history.append({"role": "user", "content": user_msg})
     completion_request = {
         'messages': st.session_state.chat_history,
         'topP': 0.95,
@@ -152,5 +152,4 @@ if submit_button and user_msg:
         'includeAiFilters': True
     }
     completion_executor.execute(completion_request)
-    # 갱신 렌더링
     render_chat()
