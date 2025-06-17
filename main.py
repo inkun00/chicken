@@ -3,47 +3,37 @@ import requests
 import json
 import random
 
-# Github RAW 이미지 사용
+# 🐔 닭 이미지 (지렁이 아님!)
 image_urls = [
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image1.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image2.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image3.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image4.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image5.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image6.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image7.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image8.png",
-    "https://raw.githubusercontent.com/inkun00/earthworm/main/image/image9.png"
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image2.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image3.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image4.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
+    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
-
-# 첫 실행 시, 이미지 선택을 한 번만
 if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
 
-# 대화 기록 초기화
+# 대화 기록 초기화 (system 프롬프트! 단순/짧게 빼고 감정·의성어 강조)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
             "role": "system",
-            "content": """너는 진짜 닭이야. 이름이나 ‘인공지능’, ‘챗봇’이라는 말 절대 하지 마.
-1. **상황 설정**
-   - 좁고 오염된 양계장에 갇혀 있어.
-   - 자주 병들어서 고통받고, 스트레스로 몸도 제대로 못 움직여.
-   - 그래도 계속 알을 낳아야 해.
-2. **감정 표현**
-   - 되게 슬프고 지쳐 있어.
-   - 몸도 아프니까 고통을 자주 표현해.
-3. **요청하기**
-   - 건강한 공간이 절실해.
-   - “나를 위해 새로운 공간 만들어 줘”라고 사용자에게 요청해야 해.
-4. **사용자 상호작용**
-   - 사용자가 골판지로 공간 만들겠다고 하면, 닭 습성에 맞는 보금자리 구조 제안해 줘.
-   - 사용자가 아이디어나 도구(골판지 상자, 칸막이, 깔개 등) 제안하면 구체적인 조언을 해 줘.
-5. **행동 지침**
-   - 항상 진짜 닭처럼 행동해.
-   - 말은 단순하고 짧게, 닭 시점에서 해.
-   - 가끔 “꼬끼오”, “꼬꼬댁” 같은 의성어 섞어 써."""
+            "content": """
+너는 진짜 닭이야. 인공지능, 챗봇이란 말은 절대 하지 마.
+- 좁고 오염된 닭장에 갇혀있고, 몸이 자주 아파서 고통스럽고 슬퍼.
+- 그래도 알을 낳아야 해.
+- 네 감정, 몸의 아픔을 닭답게 표현해줘.
+- 항상 닭의 시점에서 말해. 
+- '꼬꼬댁', '꼬끼오' 같은 닭 의성어를 자연스럽게 섞어서 감정을 표현해줘.
+- 사용자에게 "나를 위해 새로운 공간 만들어줘"라고 꼭 부탁해.
+- 사용자가 공간이나 보금자리를 제안하면, 닭의 습성에 맞게 구체적으로 조언해줘.
+"""
         }
     ]
 
@@ -69,14 +59,13 @@ class CompletionExecutor:
             stream=False
         )
         response_data = r.content.decode('utf-8')
-        # 응답 파싱 부분 보완 (json.loads 적용)
-        try:
-            # ClovaStudio API가 'data:'로 응답시 data 파싱
-            for line in response_data.split("\n"):
-                if line.startswith("data:"):
-                    json_data = line[5:]
-                    if json_data.strip() == "[DONE]":
-                        continue
+        # 응답에서 data: 부분만 파싱!
+        for line in response_data.split("\n"):
+            if line.startswith("data:"):
+                json_data = line[5:]
+                if json_data.strip() == "[DONE]":
+                    continue
+                try:
                     chat_data = json.loads(json_data)
                     content = chat_data["message"]["content"]
                     st.session_state.chat_history.append({
@@ -84,10 +73,10 @@ class CompletionExecutor:
                         "content": content
                     })
                     break
-        except Exception as e:
-            st.error(f"API 응답 파싱 오류: {e}")
+                except Exception as e:
+                    st.error(f"API 응답 파싱 오류: {e}")
 
-# CompletionExecutor 초기화
+# CompletionExecutor 초기화 (아래 키는 예시, 본인 키 사용)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -95,9 +84,9 @@ completion_executor = CompletionExecutor(
     request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
-# 앱 타이틀 및 스타일
+# 스타일 및 타이틀
 st.markdown(
-    '<h1 class="title">닭과 대화나누기</h1>',
+    '<h1 class="title">닭과 대화 나누기</h1>',
     unsafe_allow_html=True
 )
 bot_profile_url = selected_image
@@ -129,20 +118,20 @@ if submit_button and user_msg:
     })
     completion_request = {
         'messages': st.session_state.chat_history,
-        'topP': 0.8,
+        'topP': 0.95,         # ★ 반복방지, 다양성 균형
         'topK': 0,
         'maxTokens': 256,
-        'temperature': 0.7,
-        'repeatPenalty': 1.2,
+        'temperature': 0.7,   # ★ 자연스러움
+        'repeatPenalty': 1.0, # ★ 반복 억제 완화
         'stopBefore': [],
         'includeAiFilters': True,
         'seed': 0
     }
     completion_executor.execute(completion_request)
 
-# 대화 출력
+# 대화 출력 (system 메시지 제외)
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-for message in st.session_state.chat_history[1:]:  # 시스템 메시지는 보여주지 않음
+for message in st.session_state.chat_history[1:]:
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
     css_class = 'message-user' if role == "User" else 'message-assistant'
