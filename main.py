@@ -13,8 +13,8 @@ image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image5.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image6.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image7.png",
-    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
-    "https://raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
+    "raw.githubusercontent.com/inkun00/chicken/main/image/image8.png",
+    "raw.githubusercontent.com/inkun00/chicken/main/image/image9.png"
 ]
 if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
@@ -96,7 +96,6 @@ st.markdown(
     '<h1 class="title">닭과 대화 나누기</h1>',
     unsafe_allow_html=True
 )
-bot_profile_url = selected_image
 st.markdown(f"""
     <style>
     body, .main, .block-container {{ background-color: #BACEE0 !important; }}
@@ -110,6 +109,26 @@ st.markdown(f"""
     .stButton button {{ height: 38px !important; width: 70px !important; padding: 0 10px; margin-right: 0 !important; }}
     </style>
 """, unsafe_allow_html=True)
+bot_profile_url = selected_image
+
+# 대화 출력용 placeholder 생성
+chat_placeholder = st.empty()
+
+def render_chat():
+    chat_placeholder.markdown('<div class="chat-box">', unsafe_allow_html=True)
+    for message in st.session_state.chat_history[1:]:
+        if message["role"] == "assistant":
+            chat_placeholder.markdown(f'''
+                <div class="message-container">
+                    <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
+                    <div class="message-assistant">{message["content"]}</div>
+                </div>''', unsafe_allow_html=True)
+        else:
+            chat_placeholder.markdown(f'''
+                <div class="message-container">
+                    <div class="message-user">{message["content"]}</div>
+                </div>''', unsafe_allow_html=True)
+    chat_placeholder.markdown('</div>', unsafe_allow_html=True)
 
 # 입력 폼
 with st.form(key="input_form", clear_on_submit=True):
@@ -134,18 +153,5 @@ if submit_button and user_msg:
     }
     completion_executor.execute(completion_request)
 
-# 대화 출력 (system 프롬프트 제외)
-st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-for message in st.session_state.chat_history[1:]:
-    if message["role"] == "assistant":
-        st.markdown(f'''
-            <div class="message-container">
-                <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
-                <div class="message-assistant">{message["content"]}</div>
-            </div>''', unsafe_allow_html=True)
-    else:
-        st.markdown(f'''
-            <div class="message-container">
-                <div class="message-user">{message["content"]}</div>
-            </div>''', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# 채팅 내용 렌더링 (입력창 위)
+render_chat()
