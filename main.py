@@ -5,7 +5,7 @@ import json
 import random
 import re
 
-# 🐔 닭 이미지 (지렁이 아님!)
+# 🐔 닭 이미지
 image_urls = [
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image1.png",
     "https://raw.githubusercontent.com/inkun00/chicken/main/image/image2.png",
@@ -83,7 +83,7 @@ class CompletionExecutor:
                 "content": full_content.strip()
             })
 
-# CompletionExecutor 초기화 (원래 request_id 유지)
+# CompletionExecutor 초기화 (원래 request_id 사용)
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -91,16 +91,23 @@ completion_executor = CompletionExecutor(
     request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
-# 페이지 스타일 및 타이틀
-st.set_page_config(page_title="닭과 대화 나누기", layout="wide")
+# 스타일 및 타이틀
 st.markdown(
     '<h1 class="title">닭과 대화 나누기</h1>',
     unsafe_allow_html=True
 )
 st.markdown("""
 <style>
-body, .main, .block-container { background-color: #BACEE0 !important; }
-.title { font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }
+body, .main, .block-container {
+    background-color: #BACEE0 !important;
+}
+
+.title {
+    font-size: 28px !important;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 10px;
+}
 
 .chat-box {
     background-color: #BACEE0;
@@ -110,10 +117,15 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-height: 400px;
     overflow-y: auto;
     margin: 0 auto;
-    width: 80%;
+    width: 100%;               /* 입력창과 동일하게 전체 폭 */
+    box-sizing: border-box;
 }
 
-.message-container { display: flex; margin-bottom: 10px; align-items: center; }
+.message-container {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
 
 .message-assistant {
     background-color: #FFFFFF;
@@ -123,7 +135,8 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-width: 60%;
     box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-left: 0; margin-right: auto;
+    margin-left: 0;            /* 왼쪽 끝으로 붙이기 */
+    margin-right: auto;
 }
 
 .message-user {
@@ -135,10 +148,29 @@ body, .main, .block-container { background-color: #BACEE0 !important; }
     max-width: 60%;
     box-sizing: border-box;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    margin-left: auto; margin-right: 0;
+    margin-left: auto;         /* 오른쪽 끝으로 붙이기 */
+    margin-right: 0;
 }
 
-.profile-pic { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.stTextInput > div > div > input {
+    height: 38px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stButton button {
+    height: 38px !important;
+    width: 70px !important;
+    padding: 0 10px;
+    margin-right: 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -151,33 +183,38 @@ def render_chat():
         if msg["role"] == "assistant":
             html += f'''
 <div class="message-container">
-  <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
-  <div class="message-assistant">{msg["content"]}</div>
+    <img src="{bot_profile_url}" class="profile-pic" alt="프로필 이미지">
+    <div class="message-assistant">{msg["content"]}</div>
 </div>'''
         else:
             html += f'''
 <div class="message-container">
-  <div class="message-user">{msg["content"]}</div>
+    <div class="message-user">{msg["content"]}</div>
 </div>'''
     html += '</div>'
     chat_placeholder.markdown(html, unsafe_allow_html=True)
-    components.html("""
-    <script>
-      setTimeout(function() {
-        var box = window.parent.document.getElementById('chat-box');
-        if (box) { box.scrollTop = box.scrollHeight; }
-      }, 100);
-    </script>
-    """, height=0, width=0)
+    # 자동 스크롤
+    components.html(
+        """
+        <script>
+        setTimeout(function() {
+            var box = window.parent.document.getElementById('chat-box');
+            if (box) {
+                box.scrollTop = box.scrollHeight;
+            }
+        }, 100);
+        </script>
+        """,
+        height=0, width=0,
+    )
 
 # 초기 렌더링
 render_chat()
 
-# 입력폼: 입력창과 전송 버튼을 한 줄에 나란히
+# 입력 폼
 with st.form(key="input_form", clear_on_submit=True):
-    col1, col2 = st.columns([5, 1], gap="small")
-    user_msg = col1.text_input("메시지를 입력하세요:", placeholder="")
-    submit_button = col2.form_submit_button(label="전송")
+    user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
+    submit_button = st.form_submit_button(label="전송")
 
 if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
