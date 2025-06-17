@@ -21,7 +21,7 @@ if "selected_image" not in st.session_state:
     st.session_state.selected_image = random.choice(image_urls)
 selected_image = st.session_state.selected_image
 
-# Streamlit의 세션 상태를 사용하여 대화 내용을 저장
+# 대화 기록 초기화
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
         {
@@ -49,11 +49,6 @@ if "chat_history" not in st.session_state:
         {"role": "assistant", "content": "안녕, 나는 닭야 나에 대해서 궁금한 것이 있니?"}
     ]
 
-if "input_message" not in st.session_state:
-    st.session_state.input_message = ""
-if "copied_chat_history" not in st.session_state:
-    st.session_state.copied_chat_history = ""
-
 class CompletionExecutor:
     def __init__(self, host, api_key, api_key_primary_val, request_id):
         self._host = host
@@ -80,8 +75,7 @@ class CompletionExecutor:
         json_data = None
         for i, line in enumerate(lines):
             if line.startswith("event:result"):
-                next_line = lines[i + 1]
-                json_data = next_line[5:]
+                json_data = lines[i + 1][5:]
                 break
             if line.startswith("data:"):
                 json_data = line[5:]
@@ -92,13 +86,12 @@ class CompletionExecutor:
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": chat_data["message"]["content"]}
                 )
-                # Streamlit이 폼 제출 후 자동 rerun
-            except json.JSONDecodeError as e:
-                print("JSONDecodeError:", e)
+            except json.JSONDecodeError:
+                print("JSONDecodeError")
         else:
-            print("JSON 데이터가 없습니다.")
+            print("No JSON data")
 
-# 챗봇 초기화
+# CompletionExecutor 초기화
 completion_executor = CompletionExecutor(
     host='https://clovastudio.stream.ntruss.com',
     api_key='NTA0MjU2MWZlZTcxNDJiY6Yo7+BLuaAQ2B5+PgEazGquXEqiIf8NRhOG34cVQNdq',
@@ -106,15 +99,18 @@ completion_executor = CompletionExecutor(
     request_id='d1950869-54c9-4bb8-988d-6967d113e03f'
 )
 
-# Set the title and styles
-st.markdown('<h1 class="title">닭과 대화나누기</h1>', unsafe_allow_html=True)
-bot_profile_url = selected_image
+# 앱 타이틀 및 스타일
+st.markdown(
+    '<h1 class="title">닭과 대화나누기</h1>',
+    unsafe_allow_html=True
+)
+bot_profile_url = st.session_state.selected_image
 st.markdown(f"""
     <style>
     body, .main, .block-container {{ background-color: #BACEE0 !important; }}
     .title {{ font-size: 28px !important; font-weight: bold; text-align: center; padding-top: 10px; }}
     .message-container {{ display: flex; margin-bottom: 10px; align-items: center; }}
-    .message-user {{ background-color: #FFEB33; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
+    .message-user {{ background-color: #FFEB33; color: black; text-align: right; padding: 10px; border-radius: 10px; margin-left: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .message-assistant {{ background-color: #FFFFFF; text-align: left; padding: 10px; border-radius: 10px; margin-right: auto; max-width: 60%; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }}
     .profile-pic {{ width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }}
     .chat-box {{ background-color: #BACEE0; border: none; padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: scroll; margin: 0 auto; width: 80%; }}
@@ -124,14 +120,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 사용자 입력 폼
+# 입력 폼
 with st.form(key="input_form", clear_on_submit=True):
-    st.session_state.input_message = st.text_input("메시지를 입력하세요:", key="input_message", placeholder="")
+    user_msg = st.text_input("메시지를 입력하세요:", placeholder="")
     submit_button = st.form_submit_button(label="전송")
 
-# 폼 제출 처리
-if submit_button and st.session_state.input_message:
-    user_msg = st.session_state.input_message
+# 메시지 전송 처리
+if submit_button and user_msg:
     st.session_state.chat_history.append({"role": "user", "content": user_msg})
     completion_request = {
         'messages': st.session_state.chat_history,
@@ -145,39 +140,37 @@ if submit_button and st.session_state.input_message:
         'seed': 0
     }
     completion_executor.execute(completion_request)
-    st.session_state.input_message = ""
 
-# 대화 출력 영역
+# 대화 출력
 st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 for message in st.session_state.chat_history[3:]:
     role = "User" if message["role"] == "user" else "Chatbot"
     profile_url = bot_profile_url if role == "Chatbot" else None
-    message_class = 'message-user' if role == "User" else 'message-assistant'
+    css_class = 'message-user' if role == "User" else 'message-assistant'
     if role == "Chatbot":
         st.markdown(f'''<div class="message-container">
                 <img src="{profile_url}" class="profile-pic" alt="프로필 이미지">
-                <div class="{message_class}">{message["content"]}</div>
+                <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
     else:
         st.markdown(f'''<div class="message-container">
-                <div class="{message_class}">{message["content"]}</div>
+                <div class="{css_class}">{message["content"]}</div>
             </div>''', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 복사 버튼 및 대화 내용 정리
+# 대화 복사 기능
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
-with st.form(key="copy_form", clear_on_submit=False):
+with st.form(key="copy_form"): 
     copy_button = st.form_submit_button(label="복사")
 if copy_button:
-    filtered = [msg for msg in st.session_state.chat_history[3:]]
-    text = "\n".join([f"{m['role']}: {m['content']}" for m in filtered])
+    text = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.chat_history[3:]])
     st.session_state.copied_chat_history = text
-if st.session_state.copied_chat_history:
+if st.session_state.get('copied_chat_history'):
     st.markdown("<h3>대화 내용 정리</h3>", unsafe_allow_html=True)
     st.text_area("", value=st.session_state.copied_chat_history, height=200)
-    chat_history_js = st.session_state.copied_chat_history.replace("\n", "\\n").replace('"', '\\"')
+    js_text = st.session_state.copied_chat_history.replace("\n", "\\n").replace('"', '\\"')
     st.components.v1.html(f"""
-        <textarea id="copied_chat_history" style="display:none;">{chat_history_js}</textarea>
+        <textarea id="copied_chat_history" style="display:none;">{js_text}</textarea>
         <button onclick="copyToClipboard()">클립보드로 복사</button>
         <script>
         function copyToClipboard() {{
